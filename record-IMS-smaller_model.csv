@@ -1,3 +1,12 @@
 dataset_name,device,output_dir,record_path,inference_method,num_epoch,batch_size,d_model,nhead,num_workers,num_encoder_layers,num_decoder_layers,dim_feedforward,dropout,lr,context_len,pred_len,step,num_channel,gamma,mae,mse
 ETTm2,cuda:2,result-vanilla-Transformer-smaller_model/ETTm2/pred_len=96/dynamic_decoding,record-IMS-smaller_model.csv,dynamic_decoding,5,128,8,2,2,2,1,16,0.1,0.001,96,96,1,7,0.95,0.6079636015624643,0.7964965011750427
 ETTm2,cuda:1,result-vanilla-Transformer-smaller_model/ETTm2/pred_len=96/fixed_len,record-IMS-smaller_model.csv,fixed_len,5,128,8,2,2,2,1,16,0.1,0.001,96,96,1,7,0.95,0.4217498249539705,0.3322033036117242
+ETTm2,cuda:1,result-vanilla-Transformer-smaller_model/ETTm2/pred_len=192/fixed_len,record-IMS-smaller_model.csv,fixed_len,5,128,8,2,2,2,1,16,0.1,0.001,96,192,1,7,0.95,0.4714306739141356,0.4282830538895895
+ETTm2,cuda:2,result-vanilla-Transformer-smaller_model/ETTm2/pred_len=192/dynamic_decoding,record-IMS-smaller_model.csv,dynamic_decoding,5,128,8,2,2,2,1,16,0.1,0.001,96,192,1,7,0.95,0.5971194381983775,0.6072418705191253
+ETTm2,cuda:1,result-vanilla-Transformer-smaller_model/ETTm2/pred_len=336/fixed_len,record-IMS-smaller_model.csv,fixed_len,5,128,8,2,2,2,1,16,0.1,0.001,96,336,1,7,0.95,0.5686210598264422,0.6447189729838144
+ETTm2,cuda:1,result-vanilla-Transformer-smaller_model/ETTm2/pred_len=720/fixed_len,record-IMS-smaller_model.csv,fixed_len,5,128,8,2,2,2,1,16,0.1,0.001,96,720,1,7,0.95,0.6497805238354439,0.8147713360833186
+electricity,cuda:1,result-vanilla-Transformer-smaller_model/electricity/pred_len=96/fixed_len,record-IMS-smaller_model.csv,fixed_len,5,128,512,8,2,2,1,1024,0.1,0.001,96,96,1,321,0.95,0.4631077356827565,0.4365539367382343
+ETTm2,cuda:2,result-vanilla-Transformer-smaller_model/ETTm2/pred_len=336/dynamic_decoding,record-IMS-smaller_model.csv,dynamic_decoding,5,128,8,2,2,2,1,16,0.1,0.001,96,336,1,7,0.95,0.9144415316127597,1.4750218981788272
+electricity,cuda:1,result-vanilla-Transformer-smaller_model/electricity/pred_len=192/fixed_len,record-IMS-smaller_model.csv,fixed_len,5,128,512,8,2,2,1,1024,0.1,0.001,96,192,1,321,0.95,0.5494916658652457,0.6105185472651532
+national_illness,cuda:0,result-debug,record-IMS-smaller_model.csv,fixed_len,1,32,8,2,2,2,1,16,0.1,0.001,36,24,1,7,0.95,1.9137769043445587,7.103833734989166
+national_illness,cuda:0,result-debug,record-IMS-smaller_model.csv,fixed_len,10,32,8,2,2,2,1,16,0.1,0.001,36,24,1,7,0.95,1.7202945351600647,4.958711564540863

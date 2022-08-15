@@ -50,25 +50,25 @@ def load_json(path):
 
 def get_args():
     parser = ArgumentParser()
-    parser.add_argument('--dataset_name', type=str, default='electricity')
+    parser.add_argument('--dataset_name', type=str, default='national_illness')
     parser.add_argument('--device', type=str, default='cuda:0')
     parser.add_argument('--output_dir', type=str, default='result-debug')
     parser.add_argument('--record_path', type=str, default='record-IMS-smaller_model.csv')
     parser.add_argument('--inference_method', type=str, default='fixed_len', choices=['fixed_len','dynamic_decoding'])
-    parser.add_argument('--num_epoch', type=int, default=5)
-    parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--d_model', type=int, default=512)
-    parser.add_argument('--nhead', type=int, default=8)
+    parser.add_argument('--num_epoch', type=int, default=10)
+    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--d_model', type=int, default=8)
+    parser.add_argument('--nhead', type=int, default=2)
     parser.add_argument('--num_workers', type=int, default=2)
     parser.add_argument('--num_encoder_layers', type=int, default=2)
     parser.add_argument('--num_decoder_layers', type=int, default=1)
-    parser.add_argument('--dim_feedforward', type=int, default=2048)
+    parser.add_argument('--dim_feedforward', type=int, default=16)
     parser.add_argument('--dropout', type=float, default=0.1)
     parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--context_len', type=int, default=96)
-    parser.add_argument('--pred_len', type=int, default=96)
+    parser.add_argument('--context_len', type=int, default=36)
+    parser.add_argument('--pred_len', type=int, default=24)
     parser.add_argument('--step', type=int, default=1)
-    parser.add_argument('--num_channel', type=int, default=321)
+    parser.add_argument('--num_channel', type=int, default=7)
     parser.add_argument('--gamma', type=float, default=0.95)
     args = parser.parse_args()
     return args
@@ -121,6 +121,8 @@ class MyDataset(Dataset):
                 context.append(test[i:i+context_len])
                 target.append(test[i+context_len:i+context_len+pred_len])
                 i += 1
+        else:
+            raise NotImplementedError(f'mode={mode} is invalid')
         
         self.context = context
         self.target = target
@@ -162,11 +164,6 @@ class TransAm(nn.Module):
 
         self.model = nn.Transformer(d_model,nhead,num_encoder_layers,num_decoder_layers,dim_feedforward=dim_feedforward,dropout=dropout)
 
-        # self.encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead, dropout=dropout)
-        # self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_layers)        
-        # self.decoder = nn.Linear(d_model,num_channel)
-
-
         self.up = nn.Linear(num_channel,d_model)
         self.down = nn.Linear(d_model,num_channel)
 
@@ -187,8 +184,6 @@ class TransAm(nn.Module):
         tgt = self.pos_encoder(tgt)
 
         output = self.down(self.model(src, tgt, self.src_mask, self.tgt_mask))
-        # output = self.transformer_encoder(src,self.src_mask)#, self.src_mask)
-        # output = self.decoder(output)
         return output
 
     def _generate_square_subsequent_mask(self, sz):
@@ -273,10 +268,11 @@ def test_or_val(dataloader, model, epoch, summary_writer, mode, args, logger):
         for context, target in dataloader:
             context = rearrange(context,'b t d -> t b d').to(args.device)
             target = rearrange(target,'b t d -> t b d').to(args.device)
+            src = context.clone()
             
             prediction = []
             for _ in range(target.shape[0] // args.step):
-                current_step_prediction = model(context,context)
+                current_step_prediction = model(src,context)
                 prediction.append(current_step_prediction[-args.step:])
                 if args.inference_method == 'dynamic_decoding':
                     context = torch.cat([context,current_step_prediction[-args.step:]],dim=0)
@@ -332,11 +328,6 @@ def train(dataloader, model, optimizer, scheduler, epoch, summary_writer ,args, 
 
     return epoch_loss, epoch_mae, epoch_mse
     
-
-
-
-
-
 
 if __name__ == '__main__':
     args = get_args()

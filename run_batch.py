@@ -3,8 +3,8 @@ from transformer_singlestep import main, get_args, load_json
 info = load_json('dataset-info.json')
 args = get_args()
 result_dir = 'result-vanilla-Transformer-smaller_model'
-inference_method = 'fixed_len'
-# inference_method = 'dynamic_decoding'
+# inference_method = 'fixed_len'
+inference_method = 'dynamic_decoding'
 device = 'cuda:1'
 
 for d in info:

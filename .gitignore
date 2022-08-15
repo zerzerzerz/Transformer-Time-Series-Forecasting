@@ -6,3 +6,4 @@ graph
 transformer-gif
 data/
 result*/
+__pycache__
