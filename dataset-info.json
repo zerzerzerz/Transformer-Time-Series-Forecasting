@@ -1,0 +1,128 @@
+[
+    {
+        "dataset_name": "ETTm1",
+        "context_len": 96,
+        "pred_lens": [
+            96,
+            192,
+            336,
+            720
+        ],
+        "num_channel": 7,
+        "d_model": 8,
+        "dim_feedforward": 16,
+        "nhead": 2
+    },
+    {
+        "dataset_name": "ETTh1",
+        "context_len": 96,
+        "pred_lens": [
+            96,
+            192,
+            336,
+            720
+        ],
+        "num_channel": 7,
+        "d_model": 8,
+        "dim_feedforward": 16,
+        "nhead": 2
+    },
+    {
+        "dataset_name": "ETTm2",
+        "context_len": 96,
+        "pred_lens": [
+            96,
+            192,
+            336,
+            720
+        ],
+        "num_channel": 7,
+        "d_model": 8,
+        "dim_feedforward": 16,
+        "nhead": 2
+    },
+    {
+        "dataset_name": "ETTh2",
+        "context_len": 96,
+        "pred_lens": [
+            96,
+            192,
+            336,
+            720
+        ],
+        "num_channel": 7,
+        "d_model": 8,
+        "dim_feedforward": 16,
+        "nhead": 2
+    },
+    {
+        "dataset_name": "electricity",
+        "context_len": 96,
+        "pred_lens": [
+            96,
+            192,
+            336,
+            720
+        ],
+        "num_channel": 321,
+        "d_model": 512,
+        "dim_feedforward": 1024,
+        "nhead": 8
+    },
+    {
+        "dataset_name": "exchange_rate",
+        "context_len": 96,
+        "pred_lens": [
+            96,
+            192,
+            336,
+            720
+        ],
+        "num_channel": 8,
+        "d_model": 16,
+        "dim_feedforward": 32,
+        "nhead": 4
+    },
+    {
+        "dataset_name": "traffic",
+        "context_len": 96,
+        "pred_lens": [
+            96,
+            192,
+            336,
+            720
+        ],
+        "num_channel": 862,
+        "d_model": 512,
+        "dim_feedforward": 1024,
+        "nhead": 8
+    },
+    {
+        "dataset_name": "weather",
+        "context_len": 96,
+        "pred_lens": [
+            96,
+            192,
+            336,
+            720
+        ],
+        "num_channel": 21,
+        "d_model": 32,
+        "dim_feedforward": 64,
+        "nhead": 4
+    },
+    {
+        "dataset_name": "national_illness",
+        "context_len": 36,
+        "pred_lens": [
+            24,
+            36,
+            48,
+            60
+        ],
+        "num_channel": 7,
+        "d_model": 8,
+        "dim_feedforward": 16,
+        "nhead": 2
+    }
+]

@@ -1,0 +1,8 @@
+dataset_name,device,output_dir,record_path,num_epoch,batch_size,d_model,nhead,num_layers,dropout,lr,context_len,pred_len,step,num_channel,gamma,mae,mse,inference_method,num_workers,num_encoder_layers,num_decoder_layers,dim_feedforward
+electricity,cuda:0,result-debug,record-IMS.csv,10,128,512,8,1.0,0.1,0.001,96,96,1,321,0.95,1.147530109454424,2.1376038759182663,,,,,
+electricity,cuda:0,result-debug2,record-IMS.csv,10,128,512,8,1.0,0.1,0.001,96,96,1,321,0.95,0.5332310940974798,0.5784815060786712,fixed_len,,,,
+ETTm2,cuda:0,result-vanilla-Transformer/ETTm2/pred_len=96/fixed_len,record-IMS.csv,10,128,512,8,,0.1,0.001,96,96,1,7,0.95,0.3832340638771235,0.3106109820236669,fixed_len,2.0,2.0,1.0,2048.0
+ETTm2,cuda:1,result-vanilla-Transformer/ETTm2/pred_len=96/dynamic_decoding,record-IMS.csv,10,128,512,8,,0.1,0.001,96,96,1,7,0.95,0.3125050346427989,0.1994729211257997,dynamic_decoding,2.0,2.0,1.0,2048.0
+ETTm2,cuda:0,result-vanilla-Transformer/ETTm2/pred_len=192/fixed_len,record-IMS.csv,10,128,512,8,,0.1,0.001,96,192,1,7,0.95,0.4611301472726858,0.4263026798671147,fixed_len,2.0,2.0,1.0,2048.0
+ETTm2,cuda:1,result-vanilla-Transformer/ETTm2/pred_len=192/dynamic_decoding,record-IMS.csv,10,128,512,8,,0.1,0.001,96,192,1,7,0.95,0.349555918911718,0.2492841895458833,dynamic_decoding,2.0,2.0,1.0,2048.0
+ETTm2,cuda:0,result-vanilla-Transformer/ETTm2/pred_len=336/fixed_len,record-IMS.csv,10,128,512,8,,0.1,0.001,96,336,1,7,0.95,0.8701053681827727,1.375847871246792,fixed_len,2.0,2.0,1.0,2048.0

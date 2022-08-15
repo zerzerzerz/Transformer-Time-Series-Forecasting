@@ -1,0 +1,10 @@
+root_path,data_path,data,seq_len,label_len,pred_len,enc_in,dec_in
+./data/ETT-small/,ETTm1.csv,ETTm1,96,48,96 192 336 720,7,7
+./data/ETT-small/,ETTh1.csv,ETTh1,96,48,96 192 336 720,7,7
+./data/ETT-small/,ETTm2.csv,ETTm2,96,48,96 192 336 720,7,7
+./data/ETT-small/,ETTh2.csv,ETTh2,96,48,96 192 336 720,7,7
+./data/electricity/,electricity.csv,custom,96,48,96 192 336 720,321,321
+./data/exchange_rate/,exchange_rate.csv,custom,96,48,96 192 336 720,8,8
+./data/traffic/,traffic.csv,custom,96,48,96 192 336 720,862,862
+./data/weather/,weather.csv,custom,96,48,96 192 336 720,21,21
+./data/illness/,national_illness.csv,custom,36,18,24 36 48 60,7,7
