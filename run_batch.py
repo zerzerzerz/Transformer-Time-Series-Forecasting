@@ -3,14 +3,14 @@ from transformer_singlestep import main, get_args, load_json
 info = load_json('dataset-info.json')
 args = get_args()
 result_dir = 'result-vanilla-Transformer-smaller_model'
-# inference_method = 'fixed_len'
-inference_method = 'dynamic_decoding'
-device = 'cuda:1'
+inference_method = 'fixed_len'
+# inference_method = 'dynamic_decoding'
+device = 'cuda:0'
 
 for d in info:
     dataset_name = d['dataset_name']
 
-    if dataset_name in ['ETTh1','ETTh2','ETTm1','national_illness']:
+    if dataset_name in ['ETTh1','ETTh2','ETTm1','national_illness','electricity','ETTm2']:
         continue
 
     context_len = d['context_len']

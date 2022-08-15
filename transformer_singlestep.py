@@ -55,8 +55,8 @@ def get_args():
     parser.add_argument('--output_dir', type=str, default='result-debug')
     parser.add_argument('--record_path', type=str, default='record-IMS-smaller_model.csv')
     parser.add_argument('--inference_method', type=str, default='fixed_len', choices=['fixed_len','dynamic_decoding'])
-    parser.add_argument('--num_epoch', type=int, default=10)
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--num_epoch', type=int, default=5)
+    parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--d_model', type=int, default=8)
     parser.add_argument('--nhead', type=int, default=2)
     parser.add_argument('--num_workers', type=int, default=2)
@@ -79,9 +79,14 @@ class MyDataset(Dataset):
         super().__init__()
         data = pd.read_csv(join(data_root,dataset_name+'.csv')).values[:,1:].astype(np.float32)
         
-        train_len = int(data.shape[0] * 0.7)
-        val_len = int(data.shape[0] * 0.1)
-        test_len = int(data.shape[0] * 0.2)
+        if dataset_name == 'exchange_rate':
+            train_len = int(data.shape[0] * 0.70)
+            val_len   = int(data.shape[0] * 0.15)
+            test_len  = int(data.shape[0] * 0.15)
+        else:
+            train_len = int(data.shape[0] * 0.7)
+            val_len   = int(data.shape[0] * 0.1)
+            test_len  = int(data.shape[0] * 0.2)
         
         i = 0
         train = data[i: i+train_len]
@@ -209,9 +214,13 @@ def main(args):
     test_dataset = MyDataset(args.dataset_name, args.context_len, args.step, args.pred_len, 'test')
     val_dataset = MyDataset(args.dataset_name, args.context_len, args.step, args.pred_len, 'val')
 
-    train_loader = DataLoader(train_dataset,args.batch_size,shuffle=True,drop_last=True,num_workers=args.num_workers)
-    test_loader = DataLoader(test_dataset,args.batch_size,shuffle=False,drop_last=True,num_workers=args.num_workers)
-    val_loader = DataLoader(val_dataset,args.batch_size,shuffle=False,drop_last=True,num_workers=args.num_workers)
+    print('{:<20}\ttrain.num_seq = {:<6}'.format(args.dataset_name, len(train_dataset)))
+    print('{:<20}\tval.num_seq   = {:<6}'.format(args.dataset_name, len(val_dataset)))
+    print('{:<20}\ttest.num_seq  = {:<6}'.format(args.dataset_name, len(test_dataset)))
+
+    train_loader = DataLoader(train_dataset,args.batch_size,shuffle=True,drop_last=False,num_workers=args.num_workers)
+    test_loader = DataLoader(test_dataset,args.batch_size,shuffle=False,drop_last=False,num_workers=args.num_workers)
+    val_loader = DataLoader(val_dataset,args.batch_size,shuffle=False,drop_last=False,num_workers=args.num_workers)
 
     model = TransAm(
         args.d_model,
@@ -330,5 +339,38 @@ def train(dataloader, model, optimizer, scheduler, epoch, summary_writer ,args, 
     
 
 if __name__ == '__main__':
+    # args = get_args()
+    # main(args)
+
+
+    info = load_json('dataset-info.json')
     args = get_args()
-    main(args)
+    result_dir = 'result-vanilla-Transformer-smaller_model'
+    inference_method = 'fixed_len'
+    # inference_method = 'dynamic_decoding'
+    device = 'cuda:0'
+
+    for d in info:
+        dataset_name = d['dataset_name']
+
+        # if dataset_name not in ['exchange_rate']:
+        if dataset_name in ['ETTh1','ETTh2','ETTm1','national_illness',\
+            'ETTm2', 'electricity', 'exchange_rate']:
+            continue
+
+        context_len = d['context_len']
+        num_channel = d['num_channel']
+        for pred_len in d['pred_lens']:
+            args.d_model = d['d_model']
+            args.dim_feedforward = d['dim_feedforward']
+            args.nhead = d['nhead']
+            args.dataset_name = dataset_name
+            args.context_len = context_len
+            args.num_channel = num_channel
+            args.pred_len = pred_len
+            args.inference_method = inference_method
+            args.device = device
+            args.output_dir = f'{result_dir}/{dataset_name}/pred_len={pred_len}/{inference_method}'
+            args.record_path = 'record-IMS-smaller_model.csv'
+
+            main(args)

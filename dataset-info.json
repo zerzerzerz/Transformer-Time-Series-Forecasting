@@ -11,7 +11,8 @@
         "num_channel": 7,
         "d_model": 8,
         "dim_feedforward": 16,
-        "nhead": 2
+        "nhead": 2,
+        "length": 69680
     },
     {
         "dataset_name": "ETTh1",
@@ -25,7 +26,8 @@
         "num_channel": 7,
         "d_model": 8,
         "dim_feedforward": 16,
-        "nhead": 2
+        "nhead": 2,
+        "length": 17420
     },
     {
         "dataset_name": "ETTm2",
@@ -39,7 +41,8 @@
         "num_channel": 7,
         "d_model": 8,
         "dim_feedforward": 16,
-        "nhead": 2
+        "nhead": 2,
+        "length": 69680
     },
     {
         "dataset_name": "ETTh2",
@@ -53,7 +56,8 @@
         "num_channel": 7,
         "d_model": 8,
         "dim_feedforward": 16,
-        "nhead": 2
+        "nhead": 2,
+        "length": 17420
     },
     {
         "dataset_name": "electricity",
@@ -67,7 +71,8 @@
         "num_channel": 321,
         "d_model": 512,
         "dim_feedforward": 1024,
-        "nhead": 8
+        "nhead": 8,
+        "length": 26304
     },
     {
         "dataset_name": "exchange_rate",
@@ -81,7 +86,8 @@
         "num_channel": 8,
         "d_model": 16,
         "dim_feedforward": 32,
-        "nhead": 4
+        "nhead": 4,
+        "length": 7588
     },
     {
         "dataset_name": "traffic",
@@ -95,7 +101,8 @@
         "num_channel": 862,
         "d_model": 512,
         "dim_feedforward": 1024,
-        "nhead": 8
+        "nhead": 8,
+        "length": 17544
     },
     {
         "dataset_name": "weather",
@@ -109,7 +116,8 @@
         "num_channel": 21,
         "d_model": 32,
         "dim_feedforward": 64,
-        "nhead": 4
+        "nhead": 4,
+        "length": 52696
     },
     {
         "dataset_name": "national_illness",
@@ -123,6 +131,7 @@
         "num_channel": 7,
         "d_model": 8,
         "dim_feedforward": 16,
-        "nhead": 2
+        "nhead": 2,
+        "length": 966
     }
 ]
