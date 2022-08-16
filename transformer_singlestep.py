@@ -12,6 +12,8 @@ import json
 import datetime
 from tqdm import tqdm
 import os
+from torchinfo import summary
+
 
 def mkdir(p):
     if os.path.isdir(p):
@@ -19,10 +21,12 @@ def mkdir(p):
     else:
         os.makedirs(p)
 
+
 def get_datetime():
     time1 = datetime.datetime.now()
     time2 = datetime.datetime.strftime(time1,'%Y-%m-%d %H:%M:%S')
     return str(time2)
+
 
 class Logger():
     def __init__(self,log_file_path) -> None:
@@ -43,10 +47,12 @@ def save_json(obj,path):
     with open(path,'w') as f:
         json.dump(obj,f,indent=4)
 
+
 def load_json(path):
     with open(path,'r') as f:
         res = json.load(f)
     return res
+
 
 def get_args():
     parser = ArgumentParser()
@@ -59,17 +65,17 @@ def get_args():
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--d_model', type=int, default=8)
     parser.add_argument('--nhead', type=int, default=2)
-    parser.add_argument('--num_workers', type=int, default=2)
+    parser.add_argument('--num_workers', type=int, default=4)
     parser.add_argument('--num_encoder_layers', type=int, default=2)
     parser.add_argument('--num_decoder_layers', type=int, default=1)
     parser.add_argument('--dim_feedforward', type=int, default=16)
     parser.add_argument('--dropout', type=float, default=0.1)
     parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--context_len', type=int, default=36)
+    parser.add_argument('--context_len', type=int, default=36, help='Length of input_window / context / history')
     parser.add_argument('--pred_len', type=int, default=24)
     parser.add_argument('--step', type=int, default=1)
-    parser.add_argument('--num_channel', type=int, default=7)
-    parser.add_argument('--gamma', type=float, default=0.95)
+    parser.add_argument('--num_channel', type=int, default=7, help='Number of variables of time series')
+    parser.add_argument('--gamma', type=float, default=0.95, help='learning rate dacay')
     args = parser.parse_args()
     return args
 
@@ -196,15 +202,31 @@ class TransAm(nn.Module):
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
+
 def compute_loss(y,y_hat):
     '''mse'''
     return torch.nn.functional.mse_loss(y,y_hat,reduction='mean')
+
 
 def compute_metric(y,y_hat):
     '''mae,mse'''
     mae = torch.nn.functional.l1_loss(y,y_hat,reduction='mean')
     mse = torch.nn.functional.mse_loss(y,y_hat,reduction='mean')
     return mae, mse
+
+
+def create_model(args):
+    model = TransAm(
+        args.d_model,
+        args.num_encoder_layers,
+        args.num_decoder_layers,
+        args.dim_feedforward,
+        args.nhead,
+        args.dropout,
+        args.num_channel
+    ).to(args.device)
+    return model
+
 
 def main(args):
     torch.manual_seed(0)
@@ -217,20 +239,14 @@ def main(args):
     print('{:<20}\ttrain.num_seq = {:<6}'.format(args.dataset_name, len(train_dataset)))
     print('{:<20}\tval.num_seq   = {:<6}'.format(args.dataset_name, len(val_dataset)))
     print('{:<20}\ttest.num_seq  = {:<6}'.format(args.dataset_name, len(test_dataset)))
+    print('{:<20}\tcontext_len   = {:<6}'.format(args.dataset_name, args.context_len))
+    print('{:<20}\tpred_len      = {:<6}'.format(args.dataset_name, args.pred_len))
 
     train_loader = DataLoader(train_dataset,args.batch_size,shuffle=True,drop_last=False,num_workers=args.num_workers)
     test_loader = DataLoader(test_dataset,args.batch_size,shuffle=False,drop_last=False,num_workers=args.num_workers)
     val_loader = DataLoader(val_dataset,args.batch_size,shuffle=False,drop_last=False,num_workers=args.num_workers)
 
-    model = TransAm(
-        args.d_model,
-        args.num_encoder_layers,
-        args.num_decoder_layers,
-        args.dim_feedforward,
-        args.nhead,
-        args.dropout,
-        args.num_channel
-    ).to(args.device)
+    model = create_model(args)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,gamma=args.gamma,verbose=True)
 
@@ -269,8 +285,10 @@ def main(args):
     torch.save(model.cpu(),join(ck_dir,'final.pt'))
 
 
-
 def test_or_val(dataloader, model, epoch, summary_writer, mode, args, logger):
+    '''
+    return MAE and MSE
+    '''
     with torch.no_grad():
         model.eval()
         epoch_mae = epoch_mse = num_batch = 0
@@ -291,7 +309,8 @@ def test_or_val(dataloader, model, epoch, summary_writer, mode, args, logger):
                     raise NotImplementedError(f'Inference method = {args.inference_method} is not implemented')
             prediction = torch.cat(prediction,dim=0)
 
-            mae, mse = compute_metric(target,prediction)
+            t_min = min(prediction.shape[0], target.shape[0])
+            mae, mse = compute_metric(target[:t_min],prediction[:t_min])
 
             epoch_mae += mae.item()
             epoch_mse += mse.item()
@@ -308,6 +327,9 @@ def test_or_val(dataloader, model, epoch, summary_writer, mode, args, logger):
 
 
 def train(dataloader, model, optimizer, scheduler, epoch, summary_writer ,args, logger):
+    '''
+    return loss, MAE, MSE
+    '''
     model.train()
     epoch_loss = epoch_mae = epoch_mse = num_batch = 0
     for context, target in dataloader:
@@ -336,41 +358,143 @@ def train(dataloader, model, optimizer, scheduler, epoch, summary_writer ,args, 
     logger.log("Epoch={:<2}\tMode={:<5}\tMAE={:<8.6f}\tMSE={:8.6f}".format(epoch,'train',epoch_mae,epoch_mse)) 
 
     return epoch_loss, epoch_mae, epoch_mse
-    
+
+
+def test_speed(
+    context_shape: tuple,
+    step: int,
+    pred_len: int,
+    model: torch.nn.Module= None,
+    device: str ='cuda:0',
+    repetitions: int = 10,
+    warmup_repetitions: int = 5,
+    backends_cudnn_benchmark: bool = False,
+):
+    '''
+    Input:
+        input_shape = [L,B,C]
+    ReturnL
+        Avg inference time, unit is millisecond (ms)
+    '''
+    torch.backends.cudnn.benchmark = backends_cudnn_benchmark
+    model.to(device)
+    model.eval()
+
+    src = torch.randn(context_shape).to(device)
+    tgt = torch.randn(context_shape).to(device)
+
+
+
+    # 预热, GPU 平时可能为了节能而处于休眠状态, 因此需要预热
+    # print('warm up ...')
+    with torch.no_grad():
+        for _ in range(warmup_repetitions):
+            _ = model(src,tgt)
+
+    # synchronize 等待所有 GPU 任务处理完才返回 CPU 主线程
+    torch.cuda.synchronize()
+
+
+    # 设置用于测量时间的 cuda Event, 这是PyTorch 官方推荐的接口,理论上应该最靠谱
+    starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+    # 初始化一个时间容器
+    timings = np.zeros((repetitions, 1))
+
+    # print('testing ...')
+    with torch.no_grad():
+        for rep in tqdm(range(repetitions)):
+            starter.record()
+            
+            
+            full_pred = []
+            for _ in range(pred_len // step):
+                output = model(src,tgt)
+                tgt = torch.cat([tgt[step:],output[-step:]],dim=0)
+                full_pred.append(output[-step:])
+            full_pred = torch.cat(full_pred,dim=0)
+
+
+            ender.record()
+            torch.cuda.synchronize() # 等待GPU任务完成
+            curr_time = starter.elapsed_time(ender) # 从 starter 到 ender 之间用时,单位为毫秒
+            timings[rep] = curr_time
+
+    avg = timings.sum()/repetitions
+    return avg
+
+
 
 if __name__ == '__main__':
+    ############################################### run a single model
     # args = get_args()
     # main(args)
+    # exit(0)
 
+
+
+    ############################################### run a batch of models
 
     info = load_json('dataset-info.json')
     args = get_args()
-    result_dir = 'result-vanilla-Transformer-smaller_model'
+    result_dir = 'result-IMS-ETTm2-big2'
     inference_method = 'fixed_len'
     # inference_method = 'dynamic_decoding'
     device = 'cuda:0'
+    df = pd.DataFrame()
 
     for d in info:
         dataset_name = d['dataset_name']
-
-        # if dataset_name not in ['exchange_rate']:
-        if dataset_name in ['ETTh1','ETTh2','ETTm1','national_illness',\
-            'ETTm2', 'electricity', 'exchange_rate']:
+        if dataset_name != 'ETTm2':
             continue
-
         context_len = d['context_len']
         num_channel = d['num_channel']
-        for pred_len in d['pred_lens']:
-            args.d_model = d['d_model']
-            args.dim_feedforward = d['dim_feedforward']
-            args.nhead = d['nhead']
+        for pred_len in d['pred_lens'][::-1]:
+            # args.d_model = d['d_model']
+            args.d_model = 512
+            # args.dim_feedforward = d['dim_feedforward']
+            args.dim_feedforward = 2048
+            # args.nhead = d['nhead']
+            args.nhead = 1
+            args.num_epoch = 1
             args.dataset_name = dataset_name
+            args.batch_size = 256
             args.context_len = context_len
             args.num_channel = num_channel
             args.pred_len = pred_len
             args.inference_method = inference_method
             args.device = device
             args.output_dir = f'{result_dir}/{dataset_name}/pred_len={pred_len}/{inference_method}'
-            args.record_path = 'record-IMS-smaller_model.csv'
+            args.record_path = 'record-IMS-ETTm2-big2.csv'
 
+            args.record = 'Transformer-IMS'
+            args.dataset = dataset_name
+
+            args.data_path = dataset_name + '.csv'
+            args.model = args.record
             main(args)
+
+
+
+            ###########################################################
+            # test speed
+            ###########################################################
+            # model = create_model(args)
+            # args.time = test_speed(
+            #     (context_len,1,num_channel),
+            #     args.step,
+            #     args.pred_len,
+            #     model,
+            #     args.device
+            # )
+
+
+            ###########################################################
+            # test  modelsize
+            ###########################################################
+            # args.model_size = summary(model,[(context_len,1,num_channel),(context_len,1,num_channel)],\
+            #     device=args.device).total_params
+
+
+            df = pd.concat([df,pd.DataFrame([vars(args)])])
+    
+    df.to_csv(args.record_path, index=None)

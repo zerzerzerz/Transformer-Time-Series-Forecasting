@@ -7,3 +7,6 @@ transformer-gif
 data/
 result*/
 __pycache__
+*.csv
+/tmp
+tmp.py
